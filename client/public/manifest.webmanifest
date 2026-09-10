@@ -1,0 +1,9 @@
+{
+  "name": "Gestão Pastoral - Recursos Complementares",
+  "short_name": "Gestão Pastoral",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffdf8",
+  "theme_color": "#173467",
+  "description": "Livros para servir, organizar e acolher."
+}

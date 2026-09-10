@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+.project-config.json
+.manus/
+*.log
+.DS_Store
+coverage/
+
+# Temporary recovery material
+/tmp/
