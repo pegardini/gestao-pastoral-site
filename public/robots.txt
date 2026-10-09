@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /relatorio-financeiro
+
+Sitemap: https://livrosquetransformam.pcgdigital.com.br/sitemap.xml
