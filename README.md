@@ -29,3 +29,9 @@ A aplicação recuperada contempla `/`, `/gestao-pastoral`, `/o-essencial`, `/o-
 ## Segurança da publicação
 
 Este repositório é privado. Não foram copiados arquivos `.env`, credenciais, tokens, chaves, conexões de banco, configurações locais do Manus ou dados pessoais de usuários. As imagens presentes são os três recursos públicos já utilizados pela página publicada: as duas capas e o retrato público do autor.
+
+## Publicação no Render (site estático)
+
+A pasta `public/` é o site pronto para publicar (cópia exata do site recuperado + SEO: título e descrição por página, canonical, Open Graph, dados estruturados de Livro, `robots.txt`, `sitemap.xml`, favicon e imagem de compartilhamento). Para regenerá-la após qualquer mudança em `recovered-deployment/` ou nos textos de SEO: `python3 scripts/build_public.py` (requer Pillow).
+
+No Render: **New → Static Site** → este repositório, branch `main`, *Build Command* vazio, *Publish Directory* `public`. Domínio: `livrosquetransformam.pcgdigital.com.br`. A página `/relatorio-financeiro` fica fora dos buscadores (noindex + robots + fora do sitemap).
