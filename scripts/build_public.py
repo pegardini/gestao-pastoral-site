@@ -20,6 +20,10 @@ CLUB = "https://clubedeautores.com.br/cart"
 IMG_GESTAO = "/manus-storage/capa-gestao-pastoral_4021fa04.jpg"
 IMG_ESS = "/manus-storage/capa_essencial_rosa_serena_subtitulo_reforcado_9fd5d091.png"
 
+# Enquanto o servidor de códigos/e-mails não existe, as ferramentas ficam "em breve".
+# Quando o servidor estiver pronto: TOOLS_LIVE = True
+TOOLS_LIVE = False
+
 PAGES = [
     dict(path="/", title="Gestão Pastoral — Livros e ferramentas para a paróquia | Pe. Pedro Gardini",
          desc="Livros do Pe. Pedro de Celso Gardini para servir, organizar e acolher: Gestão Pastoral e O Essencial é Invisível aos Olhos. Ferramentas práticas para a paróquia.",
@@ -38,7 +42,7 @@ PAGES = [
          og=IMG_GESTAO, sitemap=True, prio="0.8"),
     dict(path="/ferramentas", title="Ferramentas de gestão pastoral — Roda da Vida, SWOT, 5W2H, Eisenhower",
          desc="Ferramentas gratuitas para preencher, visualizar e imprimir: Roda da Vida pastoral, Metas SMART, Análise SWOT, Matriz de Eisenhower, Plano 5W2H e Checklist de Acolhida.",
-         sitemap=True, prio="0.7"),
+         sitemap=True, prio="0.7", tools=True),
     dict(path="/relatorio-financeiro", title="Relatório financeiro paroquial — modelo para imprimir",
          desc="Modelo de relatório financeiro paroquial para preencher e imprimir.",
          noindex=True, sitemap=False),
@@ -149,11 +153,27 @@ def build_images():
     icon(192).save(OUT / "icon-192.png"); icon(512).save(OUT / "icon-512.png")
     icon(64).save(OUT / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
 
+EM_BREVE = ('()=>b.jsxs("main",{style:{minHeight:"100vh",display:"grid",placeItems:"center",background:"#fffdf8",padding:"40px 20px",textAlign:"center",fontFamily:"Inter,sans-serif"},'
+            'children:[b.jsxs("div",{style:{maxWidth:560},children:[b.jsx("p",{style:{color:"#a87a21",fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",fontSize:12},children:"Em breve"}),'
+            'b.jsx("h1",{style:{color:"#173467",fontFamily:"Playfair Display,serif",fontSize:"2.2rem",margin:"12px 0"},children:"Ferramentas pastorais"}),'
+            'b.jsx("p",{style:{color:"#64748b",lineHeight:1.7},children:"Estamos preparando o novo acesso às ferramentas do livro Gestão Pastoral. Volte em breve."}),'
+            'b.jsx("a",{href:"/",style:{display:"inline-block",marginTop:18,background:"#173467",color:"white",padding:"12px 20px",borderRadius:10,fontWeight:600,textDecoration:"none"},children:"Voltar para o site"})]})]})')
+
+def hide_tools():
+    js = next((OUT / "assets").glob("index-*.js"))
+    t = js.read_text(encoding="utf8")
+    for route, comp in (("/ferramentas", "Rce"), ("/relatorio-financeiro", "Mce")):
+        old = f'path:"{route}",component:{comp}}}'
+        assert t.count(old) == 1, old
+        t = t.replace(old, f'path:"{route}",component:{EM_BREVE}}}')
+    js.write_text(t, encoding="utf8")
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     (OUT / "__manus").exists() and shutil.rmtree(OUT / "__manus")  # manifesto passa a ser /manifest.webmanifest
     build_images()
+    if not TOOLS_LIVE: hide_tools()
     manifest = {"name": "Gestão Pastoral - Recursos Complementares", "short_name": "Gestão Pastoral", "start_url": "/",
                 "display": "standalone", "background_color": "#fffdf8", "theme_color": "#173467",
                 "description": "Livros para servir, organizar e acolher.",
@@ -161,7 +181,10 @@ def main():
                           {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}
     (OUT / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf8")
     base = (SRC / "index.html").read_text(encoding="utf8")
-    for p in PAGES:
+    pages = [dict(q, noindex=True, sitemap=False, title="Ferramentas pastorais — em breve | Gestão Pastoral",
+                  desc="Estamos preparando o novo acesso às ferramentas do livro Gestão Pastoral.")
+             if q.get("tools") and not TOOLS_LIVE else q for q in PAGES]
+    for p in pages:
         html = make_head_html(base, p)
         dest = OUT / "index.html" if p["path"] == "/" else OUT / p["path"].strip("/") / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True); dest.write_text(html, encoding="utf8")
@@ -169,12 +192,12 @@ def main():
     nf = make_head_html(base, dict(path="/404", title="Página não encontrada | Gestão Pastoral", desc="Página não encontrada.", noindex=True))
     (OUT / "404.html").write_text(nf, encoding="utf8")
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for p in PAGES:
+    for p in pages:
         if p.get("sitemap"):
             sm.append(f'  <url><loc>{SITE}{p["path"] if p["path"] != "/" else "/"}</loc><priority>{p["prio"]}</priority></url>')
     sm.append("</urlset>")
     (OUT / "sitemap.xml").write_text("\n".join(sm) + "\n", encoding="utf8")
-    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nDisallow: /relatorio-financeiro\n\nSitemap: {SITE}/sitemap.xml\n", encoding="utf8")
+    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nDisallow: /relatorio-financeiro\n{"" if TOOLS_LIVE else "Disallow: /ferramentas" + chr(10)}\nSitemap: {SITE}/sitemap.xml\n", encoding="utf8")
     print("ok:", sum(1 for _ in OUT.rglob("*") if _.is_file()), "arquivos em", OUT)
 
 main()
