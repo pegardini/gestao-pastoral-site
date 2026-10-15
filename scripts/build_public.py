@@ -182,10 +182,36 @@ def optimize_images():
             im.thumbnail((800, 1400), Image.LANCZOS)
             im.save(f, quality=82, optimize=True, progressive=True)
 
+# Fim da pré-venda: preço atual do livro impresso (R$ 52,68, Clube de Autores) e textos sem "pré-venda".
+# Os textos estão no bundle compilado; cada troca precisa achar exatamente o número de ocorrências esperado.
+TROCAS_PRECO = [
+    ("Garanta na pré-venda por R$ 42,68.", "Livro impresso por R$ 52,68.", 1),
+    ("Garanta na pré-venda por R$ 42,68", "Livro impresso por R$ 52,68", 1),
+    ("Garantir na pré-venda por R$ 42,68", "Comprar por R$ 52,68", 1),
+    ("Livro impresso na pré-venda: R$ 42,68", "Livro impresso: R$ 52,68", 1),
+    (" Livro impresso: pré-venda por R$ 42,68", " Livro impresso: R$ 52,68", 1),
+    ("Impresso · R$ 42,68", "Impresso · R$ 52,68", 1),
+    ("Garantir por R$ 42,68", "Comprar por R$ 52,68", 1),
+    ("Livro impresso · condição de pré-venda", "Livro impresso", 1),
+    ("Livro impresso · pré-venda", "Livro impresso", 1),
+    ("Uma condição especial válida durante os 28 dias da pré-venda.", "Venda pelo Clube de Autores.", 1),
+    ("Pré-venda aberta", "Já disponível", 2),
+]
+
+def atualizar_preco():
+    for js in (OUT / "assets").glob("index-*.js"):
+        t = js.read_text(encoding="utf-8")
+        for antigo, novo, n in TROCAS_PRECO:
+            assert t.count(antigo) == n, f"{antigo!r}: esperado {n}, achei {t.count(antigo)}"
+            t = t.replace(antigo, novo)
+        assert "42,68" not in t and "pré-venda" not in t.lower()
+        js.write_text(t, encoding="utf-8")
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     optimize_images()
+    atualizar_preco()
     # Verificação do Google Search Console (propriedade https://livrosquetransformam.pcgdigital.com.br/); não remover.
     (OUT / "google345f10a5f59b8a6b.html").write_text("google-site-verification: google345f10a5f59b8a6b.html")
     (OUT / "__manus").exists() and shutil.rmtree(OUT / "__manus")  # manifesto passa a ser /manifest.webmanifest
