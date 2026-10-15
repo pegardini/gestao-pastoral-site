@@ -6,7 +6,7 @@ A cópia recuperada é idêntica ao site que estava no ar. Este script só mexe 
 robots.txt, sitemap.xml, favicons e a imagem de compartilhamento.
 Uso: python3 scripts/build_public.py
 """
-import json, re, shutil
+import hashlib, json, re, shutil
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
@@ -23,6 +23,65 @@ IMG_ESS = "/manus-storage/capa_essencial_rosa_serena_subtitulo_reforcado_9fd5d09
 # Enquanto o servidor de códigos/e-mails não existe, as ferramentas ficam "em breve".
 # Quando o servidor estiver pronto: TOOLS_LIVE = True
 TOOLS_LIVE = True
+
+# Acesso às ferramentas sem servidor (ver scripts/tools-access.template.js).
+# Código impresso no livro (único para todos os exemplares); só a impressão digital vai para o site.
+TOOLS_CODE = "GESTAO-PASTORAL-2026"
+# Formulário público do Brevo (lista "Livros - ferramentas", dupla confirmação). Endereço público por natureza.
+BREVO_FORM_URL = "https://dbd3de88.sibforms.com/serve/MUIFAGnvsWDRw2HUAW1rW3ckEaQHXk2-GObhhT3KcJx2c8ehac54PBf1S2qkLSRXC2agyojUQWJKEYAiAw9QSX6waKEF8ttkJDy43LTTLJQrfqmvc_QvMmzC1XTrp-MvfRH6_qMu4XgjXeeNkgarfKG2js5mcBLUu0rYN_CG_hcLljPQiSZi0hYBd4alNuoBC_rWfO-hwjHKy4wRYQ=="
+
+def write_tools_access():
+    t = (ROOT / "scripts" / "tools-access.template.js").read_text(encoding="utf8")
+    h = hashlib.sha256(TOOLS_CODE.upper().replace(" ", "").encode()).hexdigest()
+    (OUT / "tools-access.js").write_text(t.replace("__CODE_HASH__", h).replace("__BREVO_URL__", BREVO_FORM_URL), encoding="utf8")
+
+
+PRIVACIDADE_HTML = """<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacidade | Gestão Pastoral — Pe. Pedro de Celso Gardini</title>
+<meta name="description" content="Como tratamos os dados de quem usa as ferramentas do livro Gestão Pastoral e aceita receber novidades.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<style>
+body{margin:0;background:#fdfbf7;color:#334155;font:17px/1.65 Georgia,'Times New Roman',serif}
+main{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+h1{color:#173467;font-size:2rem;line-height:1.2;margin:.6em 0 .2em}
+h2{color:#173467;font-size:1.2rem;margin:1.8em 0 .3em}
+a{color:#173467} .meta{color:#64748b;font-size:.9rem} .voltar{font:600 .95rem system-ui,sans-serif;text-decoration:none}
+</style></head><body><main>
+<a class="voltar" href="/">← Voltar ao site</a>
+<h1>Privacidade</h1>
+<p class="meta">Atualizado em 15/10/2026</p>
+<p>Esta página explica, sem rodeios, o que acontece com os seus dados quando você usa as ferramentas do livro <em>Gestão Pastoral</em> neste site.</p>
+
+<h2>Quem cuida dos dados</h2>
+<p>Pe. Pedro de Celso Gardini, autor do livro e responsável por este site. Dúvidas, pedidos e reclamações: <a href="mailto:contato@pcgdigital.com.br">contato@pcgdigital.com.br</a>.</p>
+
+<h2>Quem tem o código do livro</h2>
+<p>Se você digita o código impresso no livro, a conferência acontece no seu próprio navegador. Nenhum dado seu é enviado ou guardado por nós. O site apenas anota, no seu navegador, que o acesso foi liberado, para você não digitar de novo.</p>
+
+<h2>Quem escolhe “Quero conhecer as ferramentas”</h2>
+<p>Você informa nome e e-mail para liberar o acesso. Esses dados <strong>só saem do seu navegador se você marcar a caixa</strong> “Quero receber novidades por e-mail”. Sem marcar, você usa as ferramentas normalmente e nada é guardado.</p>
+<p>Se marcar, enviamos <strong>apenas o e-mail</strong> para a nossa lista de contatos no Brevo, serviço de e-mail de uma empresa francesa que atua como operadora dos dados. O nome digitado não é guardado. Antes de entrar na lista, você recebe uma mensagem para confirmar o cadastro (dupla confirmação).</p>
+<ul>
+<li><strong>Para quê:</strong> avisar sobre novidades do livro, das ferramentas e de outros trabalhos do autor.</li>
+<li><strong>Base legal:</strong> o seu consentimento (LGPD, art. 7º, I).</li>
+<li><strong>Por quanto tempo:</strong> até você pedir para sair.</li>
+</ul>
+
+<h2>Como sair ou apagar</h2>
+<p>Todo e-mail enviado tem um link de descadastro. Se preferir, escreva para <a href="mailto:contato@pcgdigital.com.br">contato@pcgdigital.com.br</a> pedindo para apagar os seus dados. Você também pode pedir acesso a eles, correção e informações sobre o tratamento, como prevê o art. 18 da LGPD.</p>
+
+<h2>Compra do livro</h2>
+<p>A compra acontece fora deste site, no Clube de Autores ou na Amazon, que têm as suas próprias políticas. Não recebemos nem guardamos dados de pagamento.</p>
+
+<h2>Mudanças</h2>
+<p>Se algo mudar nesta página, a data no topo será atualizada.</p>
+</main></body></html>
+"""
+
+def write_privacidade():
+    d = OUT / "privacidade"; d.mkdir(parents=True, exist_ok=True)
+    (d / "index.html").write_text(PRIVACIDADE_HTML, encoding="utf8")
 
 PAGES = [
     dict(path="/", title="Gestão Pastoral — Livros e ferramentas para a paróquia | Pe. Pedro Gardini",
@@ -78,6 +137,7 @@ def make_head_html(src_html, page):
     h = src_html
     # No Render, o CSS pedido com `crossorigin` responde 503/404; sem o atributo carrega normalmente.
     h = h.replace('<link rel="stylesheet" crossorigin href=', '<link rel="stylesheet" href=')
+    h = re.sub(r'(<script type="module")', r'<script src="/tools-access.js"></script>\1', h, count=1)
     h = h.replace('<html lang="en">', '<html lang="pt-BR">')
     # remove metadados antigos do Manus
     h = re.sub(r'<title>.*?</title>', '', h, count=1, flags=re.S)
@@ -196,6 +256,8 @@ TROCAS_PRECO = [
     ("Livro impresso · pré-venda", "Livro impresso", 1),
     ("Uma condição especial válida durante os 28 dias da pré-venda.", "Venda pelo Clube de Autores.", 1),
     ("Pré-venda aberta", "Já disponível", 2),
+    (" via gestao-pastoral.com.br", " via livrosquetransformam.pcgdigital.com.br", 1),
+    ('," Garantir"]', '," Comprar"]', 1),
 ]
 
 def atualizar_preco():
@@ -212,6 +274,8 @@ def main():
     shutil.copytree(SRC, OUT)
     optimize_images()
     atualizar_preco()
+    write_tools_access()
+    write_privacidade()
     # Verificação do Google Search Console (propriedade https://livrosquetransformam.pcgdigital.com.br/); não remover.
     (OUT / "google345f10a5f59b8a6b.html").write_text("google-site-verification: google345f10a5f59b8a6b.html")
     (OUT / "__manus").exists() and shutil.rmtree(OUT / "__manus")  # manifesto passa a ser /manifest.webmanifest
@@ -238,6 +302,7 @@ def main():
     for p in pages:
         if p.get("sitemap"):
             sm.append(f'  <url><loc>{SITE}{p["path"] if p["path"] != "/" else "/"}</loc><priority>{p["prio"]}</priority></url>')
+    sm.append(f'  <url><loc>{SITE}/privacidade/</loc><priority>0.2</priority></url>')
     sm.append("</urlset>")
     (OUT / "sitemap.xml").write_text("\n".join(sm) + "\n", encoding="utf8")
     (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nDisallow: /relatorio-financeiro\n{"" if TOOLS_LIVE else "Disallow: /ferramentas" + chr(10)}\nSitemap: {SITE}/sitemap.xml\n", encoding="utf8")
