@@ -76,6 +76,8 @@ def make_head_html(src_html, page):
     url = SITE + page["path"] if page["path"] != "/" else SITE + "/"
     og = SITE + "/og-image.jpg" if not page.get("og") else SITE + "/og-image.jpg"
     h = src_html
+    # No Render, o CSS pedido com `crossorigin` responde 503/404; sem o atributo carrega normalmente.
+    h = h.replace('<link rel="stylesheet" crossorigin href=', '<link rel="stylesheet" href=')
     h = h.replace('<html lang="en">', '<html lang="pt-BR">')
     # remove metadados antigos do Manus
     h = re.sub(r'<title>.*?</title>', '', h, count=1, flags=re.S)
