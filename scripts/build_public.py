@@ -22,7 +22,7 @@ IMG_ESS = "/manus-storage/capa_essencial_rosa_serena_subtitulo_reforcado_9fd5d09
 
 # Enquanto o servidor de códigos/e-mails não existe, as ferramentas ficam "em breve".
 # Quando o servidor estiver pronto: TOOLS_LIVE = True
-TOOLS_LIVE = False
+TOOLS_LIVE = True
 
 PAGES = [
     dict(path="/", title="Gestão Pastoral — Livros e ferramentas para a paróquia | Pe. Pedro Gardini",
