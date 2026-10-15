@@ -186,6 +186,8 @@ def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     optimize_images()
+    # Verificação do Google Search Console (propriedade https://livrosquetransformam.pcgdigital.com.br/); não remover.
+    (OUT / "google345f10a5f59b8a6b.html").write_text("google-site-verification: google345f10a5f59b8a6b.html")
     (OUT / "__manus").exists() and shutil.rmtree(OUT / "__manus")  # manifesto passa a ser /manifest.webmanifest
     build_images()
     if not TOOLS_LIVE: hide_tools()
