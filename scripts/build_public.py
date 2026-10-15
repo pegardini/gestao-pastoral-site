@@ -170,9 +170,22 @@ def hide_tools():
         t = t.replace(old, f'path:"{route}",component:{EM_BREVE}}}')
     js.write_text(t, encoding="utf8")
 
+def optimize_images():
+    # Reduz as imagens grandes de manus-storage mantendo nome e formato (os HTML/JS apontam para esses nomes).
+    # Original: ~7,3 MB; fica em ~1,1 MB. Os arquivos originais continuam em recovered-deployment/.
+    for f in (OUT / "manus-storage").iterdir():
+        im = Image.open(f).convert("RGB")
+        if f.suffix.lower() == ".png":
+            im.thumbnail((900, 1200), Image.LANCZOS)
+            im.quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(f, optimize=True)
+        else:
+            im.thumbnail((800, 1400), Image.LANCZOS)
+            im.save(f, quality=82, optimize=True, progressive=True)
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
+    optimize_images()
     (OUT / "__manus").exists() and shutil.rmtree(OUT / "__manus")  # manifesto passa a ser /manifest.webmanifest
     build_images()
     if not TOOLS_LIVE: hide_tools()
