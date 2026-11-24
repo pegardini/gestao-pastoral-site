@@ -336,12 +336,47 @@ def adicionar_livro_tora():
     im.thumbnail((800, 1400), Image.LANCZOS)
     im.save(d / "capa-jesus-tora.jpg", quality=84, optimize=True, progressive=True)
 
+# Menu para celular (o menu de cima só aparecia em telas largas).
+# Usa <details>, que abre e fecha sem precisar de código extra; as regras de CSS vão no fim do CSS do site.
+MENU_LINKS = [("Livros", "/#livros"), ("Gestão Pastoral", "/gestao-pastoral"), ("Jesus e a Torá", "/jesus-tora"),
+              ("O Essencial", "/o-essencial"), ("Ferramentas", "/ferramentas"), ("Sobre o autor", "/#autor")]
+MENU_CSS = """
+/* menu celular */
+.mm{display:block}.mm>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;border:1px solid #17346733;border-radius:999px;padding:8px 14px;color:#173467;font-weight:600;font-size:14px;background:#fff}
+.mm>summary::-webkit-details-marker{display:none}.mm[open]>summary{background:#173467;color:#fff}
+.mm>nav{position:absolute;left:0;right:0;top:100%;background:#fffdf8;border-bottom:1px solid #0f172a1a;box-shadow:0 18px 30px #0f172a1f;padding:8px 20px 16px;display:grid}
+.mm>nav a{padding:13px 4px;border-bottom:1px solid #0f172a0f;color:#334155;font-size:16px;font-weight:500}
+.mm>nav a:last-child{border-bottom:0}.mm>nav a:hover{color:#173467}
+@media (min-width:768px){.mm{display:none}}
+@media (max-width:767px){.vl{display:none!important}}
+"""
+
+def menu_celular():
+    links = ",".join('b.jsx("a",{href:' + _js(h) + ',children:' + _js(n) + '})' for n, h in MENU_LINKS)
+    icone = ('b.jsx("svg",{width:18,height:18,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,'
+             '"aria-hidden":"true",children:b.jsx("path",{d:"M4 6h16M4 12h16M4 18h16"})})')
+    menu = ('b.jsxs("details",{className:"mm",children:[b.jsxs("summary",{"aria-label":"Abrir menu",children:[' + icone +
+            ',"Menu"]}),b.jsx("nav",{"aria-label":"Menu",onClick:e=>{const d=e.currentTarget.closest("details");d&&d.removeAttribute("open")},children:[' +
+            links + ']})]})')
+    for js in (OUT / "assets").glob("index-*.js"):
+        t = js.read_text(encoding="utf-8")
+        for antigo, novo in [
+            ('SiteHeader.tsx:19",href:"/#livros",className:"inline-flex', 'SiteHeader.tsx:19",href:"/#livros",className:"vl inline-flex'),
+            ('"Ver livros"]})]})})}', '"Ver livros"]}),' + menu + ']})})}'),
+        ]:
+            assert t.count(antigo) == 1, antigo
+            t = t.replace(antigo, novo)
+        js.write_text(t, encoding="utf-8")
+    for css in (OUT / "assets").glob("index-*.css"):
+        css.write_text(css.read_text(encoding="utf-8") + MENU_CSS, encoding="utf-8")
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     optimize_images()
     atualizar_preco()
     adicionar_livro_tora()
+    menu_celular()
     write_tools_access()
     write_privacidade()
     # Verificação do Google Search Console (propriedade https://livrosquetransformam.pcgdigital.com.br/); não remover.
