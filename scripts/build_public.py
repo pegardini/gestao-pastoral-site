@@ -258,6 +258,7 @@ TROCAS_PRECO = [
     ("Livro impresso na pré-venda: R$ 42,68", "Livro impresso: R$ 52,68", 1),
     (" Livro impresso: pré-venda por R$ 42,68", " Livro impresso: R$ 52,68", 1),
     ("Impresso · R$ 42,68", "Impresso · R$ 52,68", 1),
+    ("Kindle · Amazon", "Kindle · R$ 31,99", 1),
     ("Garantir por R$ 42,68", "Comprar por R$ 52,68", 1),
     ("Livro impresso · condição de pré-venda", "Livro impresso", 1),
     ("Livro impresso · pré-venda", "Livro impresso", 1),
