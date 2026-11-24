@@ -85,7 +85,7 @@ def write_privacidade():
 
 PAGES = [
     dict(path="/", title="Gestão Pastoral — Livros e ferramentas para a paróquia | Pe. Pedro Gardini",
-         desc="Livros do Pe. Pedro de Celso Gardini para servir, organizar e acolher: Gestão Pastoral e O Essencial é Invisível aos Olhos. Ferramentas práticas para a paróquia.",
+         desc="Livros do Pe. Pedro de Celso Gardini para servir, organizar e acolher: Gestão Pastoral, Jesus, a Torá e a Identidade Judaica e O Essencial é Invisível aos Olhos. Ferramentas práticas para a paróquia.",
          sitemap=True, prio="1.0"),
     dict(path="/gestao-pastoral", title="Gestão Pastoral — livro de ferramentas para uma Igreja viva e organizada",
          desc="Gestão Pastoral, do Pe. Pedro de Celso Gardini: ferramentas práticas para planejar, acolher, formar equipes e transformar boas intenções em passos concretos. Leia o primeiro capítulo grátis.",
@@ -117,6 +117,13 @@ def jsonld(page):
     if page["path"] == "/":
         g.append({"@context": "https://schema.org", "@type": "WebSite", "name": "Gestão Pastoral — Livros e ferramentas",
                   "url": SITE + "/", "inLanguage": "pt-BR", "author": {"@id": SITE + "/#autor"}})
+    if page["path"] == "/":
+        g.append({"@context": "https://schema.org", "@type": "Book", "name": "Jesus, a Torá e a Identidade Judaica",
+                  "alternateName": "Jesus, a Torá e a Identidade Judaica: Um convite para ler a Bíblia de outro jeito",
+                  "author": {"@id": SITE + "/#autor"}, "inLanguage": "pt-BR", "bookFormat": "https://schema.org/EBook",
+                  "image": SITE + "/livros/capa-jesus-tora.jpg", "url": "https://www.amazon.com.br/dp/B0HNTQC769",
+                  "offers": {"@type": "Offer", "price": "17.73", "priceCurrency": "BRL",
+                             "availability": "https://schema.org/InStock", "url": "https://www.amazon.com.br/dp/B0HNTQC769"}})
     if page.get("ld") == "gestao":
         g.append({"@context": "https://schema.org", "@type": "Book", "name": "Gestão Pastoral",
                   "alternateName": "Gestão Pastoral: ferramentas práticas para uma Igreja viva e organizada",
@@ -269,11 +276,58 @@ def atualizar_preco():
         assert "42,68" not in t and "pré-venda" not in t.lower()
         js.write_text(t, encoding="utf-8")
 
+# Livro "Jesus, a Torá e a Identidade Judaica" (ebook Kindle). Entra como 2º card na página inicial.
+# A capa fica em livros-extra/ e é copiada para public/livros/.
+TORA_AMAZON = "https://www.amazon.com.br/dp/B0HNTQC769"
+TORA_PRECO = "R$ 17,73"
+TORA_CAPA_SRC = ROOT / "livros-extra" / "capa-jesus-tora.jpg"
+TORA_CAPA = "/livros/capa-jesus-tora.jpg"
+TORA_TITULO = "Jesus, a Torá e a Identidade Judaica"
+TORA_SUBTITULO = "Um convite para ler a Bíblia de outro jeito"
+TORA_DESCRICAO = ("Uma leitura católica, bíblica e pastoral que apresenta Jesus em seu ambiente judaico, a Torá, "
+                  "Paulo e as raízes judaicas da fé cristã. Para catequistas, agentes de pastoral e grupos de estudo bíblico.")
+BOTAO = ("inline-flex items-center justify-center rounded-lg bg-[#173467] px-4 py-2.5 text-sm font-semibold "
+         "text-white transition-colors hover:bg-[#22447f]")
+
+def _js(s): return json.dumps(s, ensure_ascii=False)
+
+def adicionar_livro_tora():
+    for js in (OUT / "assets").glob("index-*.js"):
+        t = js.read_text(encoding="utf-8")
+        novo_livro = (',{slug:"jesus-tora",title:' + _js(TORA_TITULO) + ',subtitle:' + _js(TORA_SUBTITULO) +
+                      ',description:' + _js(TORA_DESCRICAO) + ',coverUrl:' + _js(TORA_CAPA) +
+                      ',status:"disponível",accent:"navy"}],zd=NO[0],Gc=NO[1];')
+        trocas = [
+            ('status:"em breve",accent:"terracotta"}],zd=NO[0],Gc=NO[1];',
+             'status:"em breve",accent:"terracotta"}' + novo_livro),
+            ('children:NO.map(e=>{const t=e.slug==="gestao-pastoral";',
+             'children:[NO[0],NO[2],NO[1]].map(e=>{const t=e.slug!=="o-essencial",g=e.slug==="gestao-pastoral";'),
+            ('children:"Livro impresso: R$ 52,68"}),b.jsx("div",{"data-loc":"client/src/pages/Home.tsx:36"',
+             'children:g?"Livro impresso: R$ 52,68":' + _js("Ebook Kindle: " + TORA_PRECO) +
+             '}),b.jsx("div",{"data-loc":"client/src/pages/Home.tsx:36"'),
+            ('className:"mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap",children:t?b.jsxs(b.Fragment,',
+             'className:"mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap",children:t&&!g?b.jsx("a",{href:' +
+             _js(TORA_AMAZON) + ',target:"_blank",rel:"noreferrer",className:' + _js(BOTAO) +
+             ',children:' + _js("Comprar na Amazon · " + TORA_PRECO) + '}):t?b.jsxs(b.Fragment,'),
+            ("Dois livros, uma mesma missão.", "Uma coleção de livros, uma mesma missão."),
+            ("Juntas, elas unem gestão, acolhida e espiritualidade do cotidiano pastoral.",
+             "Juntas, elas unem gestão, acolhida, leitura da Bíblia e espiritualidade do cotidiano pastoral."),
+        ]
+        for antigo, novo in trocas:
+            assert t.count(antigo) == 1, f"{antigo[:60]!r}: esperado 1, achei {t.count(antigo)}"
+            t = t.replace(antigo, novo)
+        js.write_text(t, encoding="utf-8")
+    d = OUT / "livros"; d.mkdir(exist_ok=True)
+    im = Image.open(TORA_CAPA_SRC).convert("RGB")
+    im.thumbnail((800, 1400), Image.LANCZOS)
+    im.save(d / "capa-jesus-tora.jpg", quality=84, optimize=True, progressive=True)
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     optimize_images()
     atualizar_preco()
+    adicionar_livro_tora()
     write_tools_access()
     write_privacidade()
     # Verificação do Google Search Console (propriedade https://livrosquetransformam.pcgdigital.com.br/); não remover.
