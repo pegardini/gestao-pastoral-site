@@ -329,6 +329,9 @@ def adicionar_livro_tora():
             assert t.count(antigo) == 1, f"{antigo[:60]!r}: esperado 1, achei {t.count(antigo)}"
             t = t.replace(antigo, novo)
         js.write_text(t, encoding="utf-8")
+    # artes das redes sociais (o Buffer busca as imagens neste endereço público)
+    if (ROOT / "livros-extra" / "redes").exists():
+        shutil.copytree(ROOT / "livros-extra" / "redes", OUT / "redes", dirs_exist_ok=True)
     pg = OUT / "jesus-tora"; pg.mkdir(exist_ok=True)
     shutil.copy(ROOT / "livros-extra" / "jesus-tora.html", pg / "index.html")
     d = OUT / "livros"; d.mkdir(exist_ok=True)
