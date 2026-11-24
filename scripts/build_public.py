@@ -289,6 +289,8 @@ TORA_TITULO = "Jesus, a Torá e a Identidade Judaica"
 TORA_SUBTITULO = "Um convite para ler a Bíblia de outro jeito"
 TORA_DESCRICAO = ("Uma leitura católica, bíblica e pastoral que apresenta Jesus em seu ambiente judaico, a Torá, "
                   "Paulo e as raízes judaicas da fé cristã. Para catequistas, agentes de pastoral e grupos de estudo bíblico.")
+BOTAO_CONTORNO = ("inline-flex items-center justify-center rounded-lg border border-[#173467]/30 px-4 py-2.5 text-sm "
+                  "font-semibold text-[#173467] transition-colors hover:bg-white")
 BOTAO = ("inline-flex items-center justify-center rounded-lg bg-[#173467] px-4 py-2.5 text-sm font-semibold "
          "text-white transition-colors hover:bg-[#22447f]")
 
@@ -310,8 +312,15 @@ def adicionar_livro_tora():
              '}),b.jsx("div",{"data-loc":"client/src/pages/Home.tsx:36"'),
             ('className:"mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap",children:t?b.jsxs(b.Fragment,',
              'className:"mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap",children:t&&!g?b.jsx("a",{href:' +
-             _js(TORA_AMAZON) + ',target:"_blank",rel:"noreferrer",className:' + _js(BOTAO) +
+             _js(TORA_AMAZON) + ',target:"_blank",rel:"noreferrer",className:' + _js(BOTAO_CONTORNO) +
              ',children:' + _js("Comprar na Amazon · " + TORA_PRECO) + '}):t?b.jsxs(b.Fragment,'),
+            ('children:"Gestão Pastoral"}),b.jsx(Ct,{"data-loc":"client/src/components/SiteHeader.tsx:15"',
+             'children:"Gestão Pastoral"}),b.jsx("a",{href:"/jesus-tora",className:"transition-colors hover:text-[#173467]",children:"Jesus e a Torá"}),b.jsx(Ct,{"data-loc":"client/src/components/SiteHeader.tsx:15"'),
+            ('children:t&&!g?b.jsx("a",{href:' + _js(TORA_AMAZON),
+             'children:t&&!g?b.jsxs(b.Fragment,{children:[b.jsx("a",{href:"/jesus-tora",className:' + _js(BOTAO) +
+             ',children:"Conhecer o livro →"}),b.jsx("a",{href:' + _js(TORA_AMAZON)),
+            ('children:' + _js("Comprar na Amazon · " + TORA_PRECO) + '}):t?b.jsxs(b.Fragment,',
+             'children:' + _js("Comprar na Amazon · " + TORA_PRECO) + '})]}):t?b.jsxs(b.Fragment,'),
             ("Dois livros, uma mesma missão.", "Uma coleção de livros, uma mesma missão."),
             ("Juntas, elas unem gestão, acolhida e espiritualidade do cotidiano pastoral.",
              "Juntas, elas unem gestão, acolhida, leitura da Bíblia e espiritualidade do cotidiano pastoral."),
@@ -320,6 +329,8 @@ def adicionar_livro_tora():
             assert t.count(antigo) == 1, f"{antigo[:60]!r}: esperado 1, achei {t.count(antigo)}"
             t = t.replace(antigo, novo)
         js.write_text(t, encoding="utf-8")
+    pg = OUT / "jesus-tora"; pg.mkdir(exist_ok=True)
+    shutil.copy(ROOT / "livros-extra" / "jesus-tora.html", pg / "index.html")
     d = OUT / "livros"; d.mkdir(exist_ok=True)
     im = Image.open(TORA_CAPA_SRC).convert("RGB")
     im.thumbnail((800, 1400), Image.LANCZOS)
@@ -359,6 +370,7 @@ def main():
     for p in pages:
         if p.get("sitemap"):
             sm.append(f'  <url><loc>{SITE}{p["path"] if p["path"] != "/" else "/"}</loc><priority>{p["prio"]}</priority></url>')
+    sm.append(f'  <url><loc>{SITE}/jesus-tora</loc><priority>0.9</priority></url>')
     sm.append(f'  <url><loc>{SITE}/privacidade/</loc><priority>0.2</priority></url>')
     sm.append("</urlset>")
     (OUT / "sitemap.xml").write_text("\n".join(sm) + "\n", encoding="utf8")
